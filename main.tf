@@ -15,8 +15,8 @@ terraform {
 # Configure the AWS Provider
 provider "aws" {
   region     = "us-west-2"
-  # access_key = var.access_key
-  # secret_key = var.secret_key
+  access_key = var.access_key
+  secret_key = var.secret_key
 }
 
 resource "aws_ecr_repository" "group4_capstone_ecr_repo" {
