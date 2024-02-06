@@ -8,7 +8,7 @@ phases:
             - sudo yum install -y yum-utils
             - sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
             - sudo yum -y install terraform
-            - terraform init
+            - terraform init -reconfigure
             - terraform apply --auto-approve
             - echo logging in to AWS ECR...
             - aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 962804699607.dkr.ecr.us-west-2.amazonaws.com
