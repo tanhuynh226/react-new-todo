@@ -1,0 +1,23 @@
+version: 0.2
+phases:
+    install:
+        commands:
+            - echo install step...
+    pre_build:
+        commands:
+            - echo logging in to AWS ECR...
+            - $(aws ecr get-login --no-include-email --region us-west-2)
+    build:
+        commands:
+            - echo build Docker image on `date`
+            - cd src
+            - docker build -t group4_capstone_ecr_repo:latest .
+            - docker tag group4_capstone_ecr_repo:latest 962804699607.dkr.ecr.us-west-2.amazonaws.com/group4_capstone_ecr_repo:latest
+    post_build:
+        commands:
+            - echo build Docker image complete `date`
+            - echo push latest Docker images to ECR...
+            - docker push 962804699607.dkr.ecr.us-west-2.amazonaws.com/group4_capstone_ecr_repo:latest
+            - printf '[{"name":"group4-task,"imageUri":"962804699607.dkr.ecr.us-west-2.amazonaws.com/group4_capstone_ecr_repo:latest"}]' > imagedefinitions.json
+artifacts:
+    files: imagedefinitions.json
