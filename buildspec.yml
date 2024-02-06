@@ -3,11 +3,11 @@ phases:
     install:
         commands:
             - echo install step...
-    pre_build:
-        commands:
             - sudo yum install -y yum-utils
             - sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
             - sudo yum -y install terraform
+    pre_build:
+        commands:
             - terraform init -reconfigure
             - terraform apply --auto-approve
             - echo logging in to AWS ECR...
