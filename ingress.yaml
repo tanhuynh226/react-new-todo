@@ -15,6 +15,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: service-group4-capstone2-eks-cluster
+                name: group4-capstone2-eks-cluster-service
                 port:
                   number: 80

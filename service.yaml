@@ -2,15 +2,15 @@ apiVersion: v1
 kind: Service
 metadata:
     labels:
-        app.kubernetes.io/name: group4-capstone2-eks-cluster
+        app.kubernetes.io/name: group4-capstone2-eks-cluster-app
         app.kubernetes.io/instance: group4-capstone2-eks-cluster-instance
         app.kubernetes.io/version: "1.0.0"
         app.kubernetes.io/component: backend
         app.kubernetes.io/managed-by: kubectl
-    name: service-group4-capstone2-eks-cluster
+    name: group4-capstone2-eks-cluster-service
 spec:
     selector:
-        app: group4-capstone2-eks-cluster
+        app: group4-capstone2-eks-cluster-app
     type: NodePort
     ports:
       - protocol: TCP
