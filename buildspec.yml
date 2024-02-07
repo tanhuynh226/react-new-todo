@@ -50,7 +50,6 @@ phases:
             - kubectl rollout restart -f deployment.yaml
             - kubectl get svc --all-namespaces
             - kubectl get deployment -n kube-system aws-load-balancer-controller
-            - kubectl rollout restart -f ingress.yaml
             - kubectl get ingress/group4-ingress
             - kubectl logs -f -n kube-system -l app.kubernetes.io/instance=aws-load-balancer-controller
 artifacts:
