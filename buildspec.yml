@@ -18,7 +18,7 @@ phases:
             - terraform init -reconfigure
             - terraform apply --auto-approve
             - echo Logging into Amazon EKS...
-            - aws eks --region us-east-1 update-kubeconfig --name group4-capstone2-eks-cluster
+            - aws eks --region us-west-2 update-kubeconfig --name group4-capstone2-eks-cluster
             - echo check config
             - kubectl config view --minify
             - echo check kubectl access
