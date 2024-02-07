@@ -3,9 +3,11 @@ phases:
     install:
         commands:
             - echo Installing app dependencies...
+            - echo 'Installing terraform'
             - sudo yum install -y yum-utils
             - sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
             - sudo yum -y install terraform
+            - echo 'Installing kubectl'
             - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.18.9/2020-11-02/bin/linux/amd64/kubectl
             - chmod +x ./kubectl
             - mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
@@ -19,20 +21,20 @@ phases:
             - ./get_helm.sh
             - helm repo add eks https://aws.github.io/eks-charts
             - helm repo update eks
+            - echo 'Creating IAM account for LB controller'
             - eksctl create iamserviceaccount --cluster=group4-capstone2-eks-cluster --namespace=kube-system --name=aws-load-balancer-controller --role-name AmazonEKSLoadBalancerControllerRole --attach-policy-arn=arn:aws:iam::962804699607:policy/AWSLoadBalancerControllerIAMPolicy --approve
-            - echo Logging into Amazon EKS...
+            - echo 'Logging into Amazon EKS...'
             - aws eks --region us-west-2 update-kubeconfig --name group4-capstone2-eks-cluster
             - echo 'Installing load-balancer-controller addon'
             - helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=group4-capstone2-eks-cluster --set serviceAccount.create=false --set serviceAccount.name=aws-load-balancer-controller --set region=us-west-2 --set vpcId=vpc-0d595b75
     pre_build:
         commands:
+            - echo 'Initiate and apply Terraform infrastructure'
             - terraform init -reconfigure
             - terraform apply --auto-approve
-            - echo check config
+            - echo 'Checking kubeconfig'
             - kubectl config view --minify
-            - echo check kubectl access
-            - kubectl get svc
-            - echo logging in to AWS ECR...
+            - echo 'Logging in to AWS ECR...''
             - aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 962804699607.dkr.ecr.us-west-2.amazonaws.com
     build:
         commands:
@@ -45,10 +47,12 @@ phases:
             - echo push latest Docker images to ECR...
             - docker push 962804699607.dkr.ecr.us-west-2.amazonaws.com/group4_capstone_ecr_repo:latest
             - printf '[{"name":"group4-task","imageUri":"962804699607.dkr.ecr.us-west-2.amazonaws.com/group4_capstone_ecr_repo:latest"}]' > imagedefinitions.json
+            - echo 'Applying YAML configurations'
             - kubectl apply -f deployment.yaml
             - kubectl apply -f service.yaml
             - kubectl apply -f ingress.yaml
             - kubectl rollout restart -f deployment.yaml
+            - echo 'Verifying that configurations are active'
             - kubectl get svc --all-namespaces
             - kubectl get deployment -n kube-system aws-load-balancer-controller
             - kubectl get ingress/group4-ingress
