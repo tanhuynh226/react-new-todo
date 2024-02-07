@@ -7,7 +7,7 @@ metadata:
         app.kubernetes.io/version: "1.0.0"
         app.kubernetes.io/component: backend
         app.kubernetes.io/managed-by: kubectl
-    name: group4-capstone2-eks-cluster
+    name: service-group4-capstone2-eks-cluster
 spec:
     selector:
         app: group4-capstone2-eks-cluster
