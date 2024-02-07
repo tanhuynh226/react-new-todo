@@ -33,7 +33,7 @@ resource "aws_ecs_task_definition" "group4-task" {
   [
     {
       "name": "group4-task",
-      "image": "${aws_ecr_repository.group4_capstone_ecr_repo.repository_url}",
+      "image": "${aws_ecr_repository.group4_capstone_ecr_repo.repository_url}:latest",
       "essential": true,
       "portMappings": [
         {
@@ -188,4 +188,116 @@ resource "aws_lb_listener" "group4-listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.group4-target-group.arn # Referencing our target group
   }
+}
+
+resource "aws_eks_cluster" "group4-eks-cluster" {
+  name     = "group4-capstone2-eks-cluster"
+  role_arn = aws_iam_role.group4-k8s-role.arn
+
+  vpc_config {
+    subnet_ids = ["${aws_default_subnet.default_subnet_a.id}", "${aws_default_subnet.default_subnet_b.id}", "${aws_default_subnet.default_subnet_c.id}"]
+  }
+
+  # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
+  # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
+  depends_on = [
+    aws_iam_role_policy_attachment.group4-AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.group4-AmazonEKSVPCResourceController,
+    aws_iam_role_policy_attachment.group4-AmazonEKSCNIPolicy
+  ]
+  
+  enabled_cluster_log_types = ["api", "audit", "authenticator"]
+}
+
+output "endpoint" {
+  value = aws_eks_cluster.group4-eks-cluster.endpoint
+}
+
+output "kubeconfig-certificate-authority-data" {
+  value = aws_eks_cluster.group4-eks-cluster.certificate_authority[0].data
+}
+
+data "aws_iam_policy_document" "assume_role_eks" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["eks.amazonaws.com", "ec2.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "group4-k8s-role" {
+  name               = "group4-k8s-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_eks.json
+}
+
+resource "aws_iam_role_policy_attachment" "group4-AmazonEKSClusterPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.group4-k8s-role.name
+}
+
+# Optionally, enable Security Groups for Pods
+# Reference: https://docs.aws.amazon.com/eks/latest/userguide/security-groups-for-pods.html
+resource "aws_iam_role_policy_attachment" "group4-AmazonEKSVPCResourceController" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+  role       = aws_iam_role.group4-k8s-role.name
+}
+
+resource "aws_iam_role_policy_attachment" "group4-AmazonEKSCNIPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+  role       = aws_iam_role.group4-k8s-role.name
+}
+
+resource "aws_iam_role_policy_attachment" "group4-AmazonEKSWorkerNodePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+  role       = aws_iam_role.group4-k8s-role.name
+}
+
+resource "aws_iam_role_policy_attachment" "group4-AmazonEC2ContainerRegistryReadOnly" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.group4-k8s-role.name
+}
+
+resource "aws_eks_addon" "vpc-cni-addon" {
+  cluster_name = aws_eks_cluster.group4-eks-cluster.name
+  addon_name   = "vpc-cni"
+}
+
+resource "aws_eks_addon" "coredns-addon" {
+  cluster_name = aws_eks_cluster.group4-eks-cluster.name
+  addon_name   = "coredns"
+}
+
+resource "aws_eks_addon" "kube-proxy-addon" {
+  cluster_name = aws_eks_cluster.group4-eks-cluster.name
+  addon_name   = "kube-proxy"
+}
+
+resource "aws_eks_node_group" "group4-node-group" {
+  cluster_name    = aws_eks_cluster.group4-eks-cluster.name
+  node_group_name = "group4-node-group"
+  node_role_arn   = aws_iam_role.group4-k8s-role.arn
+  subnet_ids      = ["${aws_default_subnet.default_subnet_a.id}", "${aws_default_subnet.default_subnet_b.id}", "${aws_default_subnet.default_subnet_c.id}"]
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 2
+    min_size     = 1
+  }
+
+  update_config {
+    max_unavailable = 1
+  }
+
+  # Ensure that IAM Role permissions are created before and deleted after EKS Node Group handling.
+  # Otherwise, EKS will not be able to properly delete EC2 Instances and Elastic Network Interfaces.
+  depends_on = [
+    aws_iam_role_policy_attachment.group4-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.group4-AmazonEKSCNIPolicy,
+    aws_iam_role_policy_attachment.group4-AmazonEC2ContainerRegistryReadOnly,
+  ]
 }

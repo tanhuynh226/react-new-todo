@@ -2,14 +2,27 @@ version: 0.2
 phases:
     install:
         commands:
-            - echo install step...
+            - echo Installing app dependencies...
             - sudo yum install -y yum-utils
             - sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
             - sudo yum -y install terraform
+            - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.18.9/2020-11-02/bin/linux/amd64/kubectl
+            - chmod +x ./kubectl
+            - mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+            - echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
+            - source ~/.bashrc
+            - echo 'Check kubectl version'
+            - kubectl version --short --client
     pre_build:
         commands:
             - terraform init -reconfigure
             - terraform apply --auto-approve
+            - echo Logging into Amazon EKS...
+            - aws eks --region us-east-1 update-kubeconfig --name group4-capstone2-eks-cluster
+            - echo check config
+            - kubectl config view --minify
+            - echo check kubectl access
+            - kubectl get svc
             - echo logging in to AWS ECR...
             - aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 962804699607.dkr.ecr.us-west-2.amazonaws.com
     build:
@@ -23,5 +36,10 @@ phases:
             - echo push latest Docker images to ECR...
             - docker push 962804699607.dkr.ecr.us-west-2.amazonaws.com/group4_capstone_ecr_repo:latest
             - printf '[{"name":"group4-task","imageUri":"962804699607.dkr.ecr.us-west-2.amazonaws.com/group4_capstone_ecr_repo:latest"}]' > imagedefinitions.json
+            - kubectl apply -f deployment.yaml
+            - kubectl apply -f service.yaml
+            - kubectl apply -f ingress.yaml
+            - kubectl rollout restart -f deployment.yaml
+            - kubectl get svc --all-namespaces
 artifacts:
     files: imagedefinitions.json
