@@ -41,6 +41,6 @@ phases:
             - kubectl apply -f ingress.yaml
             - kubectl rollout restart -f deployment.yaml
             - kubectl get svc --all-namespaces
-            - kubectl get group4-ingress
+            - kubectl get ingress/group4-ingress
 artifacts:
     files: imagedefinitions.json
