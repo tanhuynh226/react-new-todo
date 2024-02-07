@@ -13,19 +13,20 @@ phases:
             - source ~/.bashrc
             - echo 'Check kubectl version'
             - kubectl version --short --client
+            - echo 'Installing helm'
             - curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 > get_helm.sh
             - chmod 700 get_helm.sh
             - ./get_helm.sh
             - helm repo add eks https://aws.github.io/eks-charts
             - helm repo update eks
             - eksctl create iamserviceaccount --cluster=group4-capstone2-eks-cluster --namespace=kube-system --name=aws-load-balancer-controller --role-name AmazonEKSLoadBalancerControllerRole --attach-policy-arn=arn:aws:iam::962804699607:policy/AWSLoadBalancerControllerIAMPolicy --approve
-            - helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=group4-capstone2-eks-cluster --set serviceAccount.create=false --set serviceAccount.name=aws-load-balancer-controller --set region=us-west-2 --set vpcId=vpc-0d595b75
     pre_build:
         commands:
             - terraform init -reconfigure
             - terraform apply --auto-approve
             - echo Logging into Amazon EKS...
             - aws eks --region us-west-2 update-kubeconfig --name group4-capstone2-eks-cluster
+            - helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=group4-capstone2-eks-cluster --set serviceAccount.create=false --set serviceAccount.name=aws-load-balancer-controller --set region=us-west-2 --set vpcId=vpc-0d595b75
             - echo check config
             - kubectl config view --minify
             - echo check kubectl access
