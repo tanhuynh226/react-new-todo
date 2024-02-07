@@ -15,6 +15,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: group4_capstone2_service
+                name: group4-service
                 port:
                   number: 80
