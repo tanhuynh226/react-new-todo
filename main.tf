@@ -125,14 +125,29 @@ resource "aws_default_vpc" "default_vpc" {
 # Providing a reference to our default subnets
 resource "aws_default_subnet" "default_subnet_a" {
   availability_zone = "us-west-2a"
+  
+  tags ={
+    "kubernetes.io/cluster/group4-capstone2-eks-cluster" = "shared"
+    "kubernetes.io/role/elb" = 1
+  }
 }
 
 resource "aws_default_subnet" "default_subnet_b" {
   availability_zone = "us-west-2b"
+  
+  tags ={
+    "kubernetes.io/cluster/group4-capstone2-eks-cluster" = "shared"
+    "kubernetes.io/role/elb" = 1
+  }
 }
 
 resource "aws_default_subnet" "default_subnet_c" {
   availability_zone = "us-west-2c"
+  
+  tags ={
+    "kubernetes.io/cluster/group4-capstone2-eks-cluster" = "shared"
+    "kubernetes.io/role/elb" = 1
+  }
 }
 
 resource "aws_alb" "group4-alb" {
