@@ -9,17 +9,17 @@ metadata:
     name: group4-capstone2-eks-cluster-deployment
 spec:
     replicas: 1
-        selector:
-            matchLabels:
+    selector:
+        matchLabels:
+            app: group4-capstone2-eks-cluster
+    template:
+        metadata:
+            labels:
                 app: group4-capstone2-eks-cluster
-        template:
-            metadata:
-                labels:
-                app: group4-capstone2-eks-cluster
-            spec:
-                containers:
-                    - image: 962804699607.dkr.ecr.us-west-2.amazonaws.com/group4_capstone_ecr_repo:latest
-                    imagePullPolicy: Always
-                    name: group4-capstone2-eks-cluster
-                    ports:
-                        - containerPort: 8080
+        spec:
+            containers:
+                - image: 962804699607.dkr.ecr.us-west-2.amazonaws.com/group4_capstone_ecr_repo:latest
+                imagePullPolicy: Always
+                name: group4-capstone2-eks-cluster
+                ports:
+                    - containerPort: 8080
